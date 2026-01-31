@@ -13,6 +13,9 @@ export async function sendVerificationEmail(
       user: process.env.EMAIL_FROM,
       pass: process.env.EMAIL_PASSWORD,
     },
+    tls: {
+      rejectUnauthorized: false,
+    },
   });
 
   const mailOptions = {

@@ -94,6 +94,35 @@ export const {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials: any) {
+        // 1. Check for token-based login (Email Verification Auto-Login)
+        if (credentials.token && credentials.email) {
+          const { token, email } = credentials;
+
+          // Fetch token from DB
+          const verificationToken = await db.token.findFirst({
+            where: { token, type: "EmailVerification" },
+          });
+
+          if (
+            !verificationToken ||
+            verificationToken.email !== email ||
+            new Date(verificationToken.expires) < new Date()
+          ) {
+            return null;
+          }
+
+          // Fetch user
+          const user = await db.user.findUnique({ where: { email } });
+
+          if (!user) return null;
+
+          // Delete the token now that it has been used for login
+          await db.token.delete({ where: { id: verificationToken.id } });
+
+          return user;
+        }
+
+        // 2. Default Password Login
         const validatedFields = SigninSchema.safeParse(credentials);
 
         if (validatedFields.error) return null;
