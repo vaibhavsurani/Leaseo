@@ -13,21 +13,23 @@ import Social from "./Social";
 interface CardWrapperProps {
   children: React.ReactNode;
   headerLabel: string;
-  backButtonLable: string;
+  backButtonLabel: string;
   backButtonHref: string;
   headerdescription: string;
   isDisabled: boolean;
   showSocial?: boolean;
+  footerContent?: React.ReactNode;
 }
 
 export const CardWrapper = ({
   children,
   headerLabel,
   headerdescription,
-  backButtonLable,
+  backButtonLabel,
   backButtonHref,
   isDisabled,
   showSocial = true,
+  footerContent,
 }: CardWrapperProps) => {
   return (
     <section className="flex h-screen items-center justify-center my-8 mx-4">
@@ -40,11 +42,12 @@ export const CardWrapper = ({
         <CardFooter className="flex-col pb-0">
           {showSocial && <Social disabled={isDisabled} />}
           <div className="pt-2.5 pb-1">
-            <BackButton href={backButtonHref} lable={backButtonLable} />
+            <BackButton href={backButtonHref} label={backButtonLabel} />
           </div>
+          {footerContent}
         </CardFooter>
         {/* <CardFooter className="pb-6"></CardFooter> */}
       </Card>
-    </section>
+    </section >
   );
 };

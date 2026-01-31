@@ -74,7 +74,7 @@ export function LoginForm() {
       headerLabel="Welcome back"
       headerdescription="Login with your Google account"
       backButtonHref="/auth/signup"
-      backButtonLable="Don't have an account?"
+      backButtonLabel="Don't have an account?"
       isDisabled={isPending}
     >
       <Form {...form}>
@@ -91,6 +91,7 @@ export function LoginForm() {
                     placeholder="xyz@gmail.com"
                     {...field}
                     disabled={isPending}
+                    autoComplete="email"
                   />
                 </FormControl>
                 <FormMessage />
@@ -104,29 +105,30 @@ export function LoginForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
+                <div className="relative">
+                  <FormControl>
                     <Input
                       placeholder="Enter you Password"
                       {...field}
                       disabled={isPending}
                       type={isPasswordVisible ? "text" : "password"}
+                      autoComplete="current-password"
                     />
-                    <button
-                      className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
-                      onClick={() => {
-                        setIsPasswordVisible(!isPasswordVisible);
-                      }}
-                      type="button"
-                    >
-                      {isPasswordVisible ? (
-                        <Eye className="h-4 w-4" />
-                      ) : (
-                        <EyeOff className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </FormControl>
+                  </FormControl>
+                  <button
+                    className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
+                    onClick={() => {
+                      setIsPasswordVisible(!isPasswordVisible);
+                    }}
+                    type="button"
+                  >
+                    {isPasswordVisible ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 <FormMessage />
                 <Button
                   disabled={isPending}

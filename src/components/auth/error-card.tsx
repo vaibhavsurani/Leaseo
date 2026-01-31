@@ -28,7 +28,7 @@ export const ErrorCard = () => {
         )}
       </CardContent>
       <CardFooter>
-        <BackButton lable="Back to login" href="/auth/signin" />
+        <BackButton label="Back to login" href="/auth/signin" />
       </CardFooter>
     </Card>
   );
