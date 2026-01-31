@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Leaseo
 
-## Getting Started
+Leaseo is a modern, comprehensive rental marketplace platform built with [Next.js 16](https://nextjs.org/). It facilitates seamless interactions between vendors and customers for renting goods and services, featuring robust order management, inventory tracking, and financial reporting.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### For Vendors
+- **Dashboard**: Real-time overview of revenue, active rentals, and order status.
+- **Product Management**: Create and manage rental products with variant support (attributes like size, color).
+- **Order Management**: Process rental orders, track status (Draft -> Confirmed -> In Progress -> Completed).
+- **Inventory Tracking**: Monitor stock levels across different states (In Warehouse, With Customer, Maintenance).
+- **Financials**: Generate invoices and track payments.
+- **Reports**: View detailed analytics on business performance.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### For Customers
+- **Browse & Search**: Find products available for rent.
+- **Quotations**: Request quotes for bulk or custom rental periods.
+- **Rental Tracking**: Track active rentals and return schedules.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Core Platform
+- **Authentication**: Secure role-based access (Admin, Vendor, Customer) using NextAuth.js.
+- **Database**: PostgreSQL with Prisma ORM for reliable data management.
+- **UI/UX**: Modern, responsive interface built with Tailwind CSS v4 and Radix UI.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tech Stack
 
-## Learn More
+- **Framework**: [Next.js 16](https://nextjs.org/) (React 19)
+- **Database**: [PostgreSQL](https://www.postgresql.org/)
+- **ORM**: [Prisma](https://www.prisma.io/)
+- **Authentication**: [NextAuth.js](https://authjs.dev/)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Components**: [Radix UI](https://www.radix-ui.com/), [Shadcn UI](https://ui.shadcn.com/) implementation
+- **Forms**: React Hook Form + Zod
+- **Charts**: Recharts
+- **Image Storage**: Cloudinary
 
-To learn more about Next.js, take a look at the following resources:
+## 🏁 Getting Started
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Prerequisites
+- Node.js 20+
+- PostgreSQL database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Installation
 
-## Deploy on Vercel
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd Leaseo
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. **Environment Setup**
+   Create a `.env` file in the root directory with the following variables:
+   ```env
+   # Database
+   DATABASE_URL="postgresql://user:password@localhost:5432/leaseo"
+
+   # Authentication
+   AUTH_SECRET="your-generated-secret"
+
+   # Cloudinary (for image uploads)
+   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="your-cloud-name"
+   CLOUDINARY_API_KEY="your-api-key"
+   CLOUDINARY_API_SECRET="your-api-secret"
+   ```
+
+4. **Database Setup**
+   Push the schema to your database:
+   ```bash
+   npx prisma db push
+   ```
+
+5. **Run Development Server**
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+## 📜 Scripts
+
+- `npm run dev`: Starts the development server.
+- `npm run build`: Builds the application for production.
+- `npm run start`: Starts the production server.
+- `npm run lint`: Runs ESLint checks.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License.
