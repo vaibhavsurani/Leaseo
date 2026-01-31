@@ -9,7 +9,7 @@ import { sendVerificationEmail } from "@/lib/email";
 
 export const Signin = async (
   values: z.infer<typeof SigninSchema>,
-  callbackUrl?: string | null
+  callbackUrl?: string | null,
 ) => {
   const validationeddFields = SigninSchema.safeParse(values);
 
@@ -23,31 +23,43 @@ export const Signin = async (
     },
   });
 
-  if (!existingUser || !existingUser.email || !existingUser.password)
-    return { error: "Email does not exist" };
+  // Check if user exists
+  if (!existingUser || !existingUser.email || !existingUser.password) {
+    return { error: "Invalid User ID or Password." };
+  }
 
+  // Check if user is active
+  if (!existingUser.isActive) {
+    return {
+      error: "Your account has been deactivated. Please contact support.",
+    };
+  }
+
+  // Verify password first
+  const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+
+  if (!isPasswordValid) {
+    return { error: "Invalid User ID or Password." };
+  }
+
+  // Check email verification
   if (!existingUser.emailVerified) {
     const verificationToken = await generateVerificationToken(
-      existingUser.email
+      existingUser.email,
     );
 
     try {
       await sendVerificationEmail(
         verificationToken.email,
         verificationToken.token,
-        existingUser.firstName || "User"
+        existingUser.firstName || "User",
       );
     } catch (error) {
-      console.error("Test email failed:", error);
+      console.error("Verification email failed:", error);
     }
 
     return { error: "Email not verified. Confirmation email sent!" };
   }
 
-  const check = await bcrypt.compare(password, existingUser.password);
-
-  if (!check) return { error: "Invalid Password" };
-
-  // Explicitly return role typed correctly or as string
-  return { success: true, role: (existingUser as any).role };
+  return { success: true, role: existingUser.role };
 };

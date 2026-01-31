@@ -19,29 +19,24 @@ export async function middleware(req: NextRequest) {
 
   const pathname = nextUrl.pathname;
 
+  // Skip API auth routes
   if (pathname.startsWith(apiAuthPrefix)) return NextResponse.next();
 
   const isAuthRoute = authRoutes.includes(pathname);
   const isPrivateRoute = privateRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
 
+  // If logged in and trying to access auth routes, redirect to home
   if (isLoggedIn && isAuthRoute) {
-    if (session?.user?.role === "VENDOR") {
-      return NextResponse.redirect(new URL("/vendor/dashboard", nextUrl));
-    }
-    return NextResponse.redirect(new URL("/customer/dashboard", nextUrl));
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
   }
 
-  // Protect Vendor Routes
-  if (isLoggedIn && pathname.startsWith("/vendor") && session?.user?.role !== "VENDOR") {
-    return NextResponse.redirect(new URL("/customer/dashboard", nextUrl));
-  }
-
+  // Not logged in trying to access private routes - redirect to login
   if (!isLoggedIn && isPrivateRoute) {
     const callbackUrl = encodeURIComponent(nextUrl.pathname + nextUrl.search);
     return NextResponse.redirect(
-      new URL(`/auth/login?callbackUrl=${callbackUrl}`, nextUrl)
+      new URL(`/auth/login?callbackUrl=${callbackUrl}`, nextUrl),
     );
   }
 

@@ -1,91 +1,262 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-    LayoutDashboard,
-    Package,
-    ShoppingCart,
-    FileText,
-    Settings,
-    LogOut,
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  FileText,
+  BarChart3,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Store,
+  Menu,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { useCurrentUserClient } from "@/hook/use-current-user";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const sidebarLinks = [
+  {
+    title: "Dashboard",
+    href: "/vendor/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Orders",
+    href: "/vendor/orders",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Products",
+    href: "/vendor/products",
+    icon: Package,
+  },
+  {
+    title: "Invoices",
+    href: "/vendor/invoices",
+    icon: FileText,
+  },
+  {
+    title: "Customers",
+    href: "/vendor/customers",
+    icon: Users,
+  },
+  {
+    title: "Reports",
+    href: "/vendor/reports",
+    icon: BarChart3,
+  },
+  {
+    title: "Settings",
+    href: "/vendor/settings",
+    icon: Settings,
+  },
+];
+
+function SidebarContent({
+  collapsed,
+  onCollapse,
+}: {
+  collapsed: boolean;
+  onCollapse?: () => void;
+}) {
+  const pathname = usePathname();
+
+  return (
+    <TooltipProvider delayDuration={0}>
+      <div className="flex flex-col h-full">
+        {/* Logo */}
+        <div className="flex items-center justify-between h-16 px-4 border-b">
+          <Link
+            href="/vendor/dashboard"
+            className={cn(
+              "flex items-center gap-2 font-bold text-xl",
+              collapsed && "justify-center",
+            )}
+          >
+            <Store className="h-6 w-6 text-primary" />
+            {!collapsed && <span>Vendor Portal</span>}
+          </Link>
+          {onCollapse && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onCollapse}
+              className="hidden lg:flex"
+            >
+              {collapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-4">
+          <ul className="space-y-1 px-2">
+            {sidebarLinks.map((link) => {
+              const isActive =
+                pathname === link.href || pathname?.startsWith(link.href + "/");
+              const Icon = link.icon;
+
+              const linkContent = (
+                <Link
+                  href={link.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                    collapsed && "justify-center px-2",
+                  )}
+                >
+                  <Icon className={cn("h-5 w-5", collapsed && "h-5 w-5")} />
+                  {!collapsed && <span>{link.title}</span>}
+                </Link>
+              );
+
+              if (collapsed) {
+                return (
+                  <li key={link.href}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                      <TooltipContent side="right">
+                        <p>{link.title}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </li>
+                );
+              }
+
+              return <li key={link.href}>{linkContent}</li>;
+            })}
+          </ul>
+        </nav>
+
+        {/* Logout */}
+        <div className="p-4 border-t">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-3 text-muted-foreground hover:text-foreground",
+              collapsed && "justify-center px-2",
+            )}
+            onClick={() => signOut({ callbackUrl: "/" })}
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span>Logout</span>}
+          </Button>
+        </div>
+      </div>
+    </TooltipProvider>
+  );
+}
 
 export function VendorSidebar() {
-    const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
 
-    const routes = [
-        {
-            label: "Dashboard",
-            icon: LayoutDashboard,
-            href: "/vendor/dashboard",
-            active: pathname === "/vendor/dashboard",
-        },
-        {
-            label: "Orders",
-            icon: ShoppingCart,
-            href: "/vendor/dashboard/orders",
-            active: pathname.includes("/vendor/dashboard/orders"),
-        },
-        {
-            label: "Products",
-            icon: Package,
-            href: "/vendor/products",
-            active: pathname.includes("/vendor/products"),
-        },
-        {
-            label: "Reports",
-            icon: FileText,
-            href: "/vendor/reports",
-            active: pathname === "/vendor/reports",
-        },
-        {
-            label: "Settings",
-            icon: Settings,
-            href: "/vendor/settings",
-            active: pathname === "/vendor/settings",
-        },
-    ];
+  return (
+    <aside
+      className={cn(
+        "hidden lg:flex flex-col bg-background border-r transition-all duration-300",
+        collapsed ? "w-[70px]" : "w-64",
+      )}
+    >
+      <SidebarContent
+        collapsed={collapsed}
+        onCollapse={() => setCollapsed(!collapsed)}
+      />
+    </aside>
+  );
+}
 
-    return (
-        <div className="space-y-4 py-4 flex flex-col h-full bg-slate-100 text-slate-800 border-r border-slate-200">
-            <div className="px-3 py-2 flex-1">
-                <Link href="/vendor/dashboard" className="flex items-center pl-3 mb-14">
-                    <h1 className="text-2xl font-bold">
-                        Vendor<span className="text-blue-600">Portal</span>
-                    </h1>
-                </Link>
-                <div className="space-y-1">
-                    {routes.map((route) => (
-                        <Link
-                            key={route.href}
-                            href={route.href}
-                            className={cn(
-                                "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-blue-600 hover:bg-blue-100/50 rounded-lg transition",
-                                route.active
-                                    ? "text-blue-600 bg-blue-100"
-                                    : "text-slate-500"
-                            )}
-                        >
-                            <div className="flex items-center flex-1">
-                                <route.icon className={cn("h-5 w-5 mr-3", route.active ? "text-blue-600" : "text-slate-500 group-hover:text-blue-600")} />
-                                {route.label}
-                            </div>
-                        </Link>
-                    ))}
-                </div>
+export function VendorHeader() {
+  const { user } = useCurrentUserClient();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const initials = user
+    ? `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() ||
+      "V"
+    : "V";
+
+  return (
+    <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-background px-4 lg:px-6">
+      {/* Mobile menu */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="lg:hidden">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 w-64">
+          <SidebarContent collapsed={false} />
+        </SheetContent>
+      </Sheet>
+
+      {/* Search (optional) */}
+      <div className="flex-1" />
+
+      {/* User menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user?.image || undefined} />
+              <AvatarFallback>{initials}</AvatarFallback>
+            </Avatar>
+            <span className="hidden md:inline-block text-sm font-medium">
+              {user?.firstName || "Vendor"}
+            </span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel>
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
-            <div className="px-3 py-2">
-                <button
-                    onClick={() => signOut({ callbackUrl: "/auth/login" })}
-                    className="flex items-center p-3 w-full justify-start font-medium cursor-pointer text-slate-500 hover:text-red-600 hover:bg-red-100/50 rounded-lg transition"
-                >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    Logout
-                </button>
-            </div>
-        </div>
-    );
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/vendor/settings">
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </header>
+  );
 }

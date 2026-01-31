@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 export async function sendVerificationEmail(
   email: string,
   token: string,
-  name: string
+  name: string,
 ) {
   const VerificationLink = `${process.env.BASE_URL}/auth/new-verification?token=${token}`;
 
@@ -12,9 +12,6 @@ export async function sendVerificationEmail(
     auth: {
       user: process.env.EMAIL_FROM,
       pass: process.env.EMAIL_PASSWORD,
-    },
-    tls: {
-      rejectUnauthorized: false,
     },
   });
 
@@ -42,9 +39,10 @@ export async function sendVerificationEmail(
 
 export async function sendPasswordResetEmail(
   email: string,
-  token: string
+  token: string,
+  name?: string,
 ) {
-  const ResetLink = `${process.env.BASE_URL}/auth/new-password?token=${token}`;
+  const resetLink = `${process.env.BASE_URL}/auth/reset-password?token=${token}`;
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -52,26 +50,28 @@ export async function sendPasswordResetEmail(
       user: process.env.EMAIL_FROM,
       pass: process.env.EMAIL_PASSWORD,
     },
-    tls: {
-      rejectUnauthorized: false,
-    },
   });
 
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to: email,
     subject: "Reset your password",
-    html: `<h2>Reset your password</h2>
-        <p>Click the link below to reset your password:</p>
-        <a href="${ResetLink}">Reset Password</a>
-        <p>Or copy/paste: ${ResetLink}</p>
-        <p>This link expires in 1 hour.</p>`,
+    html: `
+      <h1>Reset Your Password</h1>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetLink}">Reset Password</a>
+      <p>This link will expire in 1 hour.</p>
+      <p>If you didn't request this, please ignore this email.</p>
+    `,
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    console.log("Transporter created, attempting to send email...");
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Password Reset Mail sent successfully:", info.response);
+    return info;
   } catch (error) {
-    console.error("Error sending Reset email:", error);
+    console.error("Error sending Password Reset email:", error);
     throw error;
   }
 }

@@ -38,7 +38,7 @@ export const NewVerificationForm = () => {
       headerLabel="Verification"
       headerdescription="Conforming your verification"
       backButtonHref="/auth/signin"
-      backButtonLabel="Back to login"
+      backButtonLable="Back to login"
       isDisabled={true}
       showSocial={false}
     >

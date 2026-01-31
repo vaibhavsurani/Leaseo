@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 import { CardWrapper } from "./card-wrapper";
 import {
   Form,
@@ -17,19 +15,19 @@ import { RegisterSchema } from "@/lib";
 import * as z from "zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Register } from "@/actions/auth/signup";
-import { useRouter } from "next/navigation";
+import { Register } from "@/actions/auth/register";
+import Link from "next/link";
 
 export function RegisterForm() {
-  const router = useRouter();
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
     useState<boolean>(false);
   const [isPending, startTransition] = useTransition();
-  const form = useForm({
+
+  const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       firstName: "",
@@ -37,11 +35,12 @@ export function RegisterForm() {
       email: "",
       password: "",
       confirmPassword: "",
+      couponCode: "",
     },
   });
 
   const onSubmit = (values: z.infer<typeof RegisterSchema>) => {
-    const toastId = toast.loading("Registering in...");
+    const toastId = toast.loading("Creating your account...");
 
     startTransition(() => {
       Register(values)
@@ -57,7 +56,6 @@ export function RegisterForm() {
               id: toastId,
             });
             form.reset();
-            router.push("/auth/login");
           }
         })
         .catch((error) => {
@@ -72,56 +70,39 @@ export function RegisterForm() {
   return (
     <CardWrapper
       headerLabel="Create an Account"
-      headerdescription="Register with your Google account"
+      headerdescription="Sign up to get started"
       backButtonHref="/auth/login"
-      backButtonLabel="Already have an account?"
+      backButtonLable="Already have an account?"
       isDisabled={isPending}
-      footerContent={
-        <div className="w-full flex justify-center pb-4">
-          <Button variant="link" asChild className="text-muted-foreground">
-            <Link href="/auth/vendor-signup">Become a vendor</Link>
-          </Button>
-        </div>
-      }
+      showSocial={false}
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="flex space-x-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="firstName"
               disabled={isPending}
               render={({ field }) => (
-                <FormItem className="w-1/2">
+                <FormItem>
                   <FormLabel>First Name</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="John"
-                      {...field}
-                      value={field.value || ""}
-                      disabled={isPending}
-                      autoComplete="given-name"
-                    />
+                    <Input placeholder="John" {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="lastName"
               disabled={isPending}
               render={({ field }) => (
-                <FormItem className="w-1/2">
+                <FormItem>
                   <FormLabel>Last Name</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Doe"
-                      {...field}
-                      value={field.value || ""}
-                      disabled={isPending}
-                      autoComplete="family-name"
-                    />
+                    <Input placeholder="Doe" {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -135,19 +116,20 @@ export function RegisterForm() {
             disabled={isPending}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Email ID</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="xyz@gmail.com"
+                    placeholder="john@example.com"
+                    type="email"
                     {...field}
                     disabled={isPending}
-                    autoComplete="email"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="password"
@@ -155,34 +137,32 @@ export function RegisterForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
-                <div className="relative">
-                  <FormControl>
+                <FormControl>
+                  <div className="relative">
                     <Input
-                      placeholder="Enter you Password"
+                      placeholder="Enter your password"
                       {...field}
                       disabled={isPending}
                       type={isPasswordVisible ? "text" : "password"}
-                      autoComplete="new-password"
                     />
-                  </FormControl>
-                  <button
-                    className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
-                    onClick={() => {
-                      setIsPasswordVisible(!isPasswordVisible);
-                    }}
-                    type="button"
-                  >
-                    {isPasswordVisible ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
+                    <button
+                      className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
+                      onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                      type="button"
+                    >
+                      {isPasswordVisible ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="confirmPassword"
@@ -190,47 +170,70 @@ export function RegisterForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Confirm Password</FormLabel>
-                <div className="relative">
-                  <FormControl>
+                <FormControl>
+                  <div className="relative">
                     <Input
-                      placeholder="Confirm your Password"
+                      placeholder="Confirm your password"
                       {...field}
-                      value={field.value || ""}
                       disabled={isPending}
                       type={isConfirmPasswordVisible ? "text" : "password"}
-                      autoComplete="new-password"
                     />
-                  </FormControl>
-                  <button
-                    className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
-                    onClick={() => {
-                      setIsConfirmPasswordVisible(!isConfirmPasswordVisible);
-                    }}
-                    type="button"
-                  >
-                    {isConfirmPasswordVisible ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
+                    <button
+                      className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
+                      onClick={() =>
+                        setIsConfirmPasswordVisible(!isConfirmPasswordVisible)
+                      }
+                      type="button"
+                    >
+                      {isConfirmPasswordVisible ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button
+
+          <FormField
+            control={form.control}
+            name="couponCode"
             disabled={isPending}
-            type="submit"
-            className="w-full space-y-0 py-0 mt-2"
-          >
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Coupon Code (Optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter coupon code"
+                    {...field}
+                    disabled={isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button disabled={isPending} type="submit" className="w-full mt-4">
             {isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Mail className="mr-2 h-4 w-4" />
+              <UserPlus className="mr-2 h-4 w-4" />
             )}
-            Register with Mail
+            Register
           </Button>
+
+          <div className="text-center text-sm">
+            <Link
+              href="/auth/vendor-signup"
+              className="text-primary hover:underline font-medium"
+            >
+              Become a vendor
+            </Link>
+          </div>
         </form>
       </Form>
     </CardWrapper>

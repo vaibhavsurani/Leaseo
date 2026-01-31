@@ -5,6 +5,7 @@ import { authConfig } from "./auth.config";
 import Credentials from "next-auth/providers/credentials";
 import { SigninSchema } from "./lib";
 import bcrypt from "bcryptjs";
+import { UserRole } from "@prisma/client";
 
 export const {
   handlers: { GET, POST },
@@ -23,24 +24,69 @@ export const {
       } catch (error) {
         console.error(
           "Failed to update emailVerified during linkAccount:",
-          error
+          error,
         );
       }
     },
   },
 
   callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.phone = user.phone;
+    async jwt({ token, user, trigger, session: updateSession }) {
+      // Handle session update (e.g., when profile image changes)
+      if (trigger === "update" && updateSession) {
+        if (updateSession.image) {
+          token.image = updateSession.image;
+        }
+        if (updateSession.firstName) {
+          token.firstName = updateSession.firstName;
+        }
+        if (updateSession.lastName) {
+          token.lastName = updateSession.lastName;
+        }
       }
 
-      if (trigger === "update" && session) {
-        token = { ...token, ...session };
+      // Initial sign in - user object is passed
+      if (user) {
+        token.id = user.id;
+        // Fetch user details from database
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: {
+            role: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            image: true,
+          },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.firstName = dbUser.firstName;
+          token.lastName = dbUser.lastName;
+          token.companyName = dbUser.companyName;
+          token.image = dbUser.image;
+        }
+      }
+
+      // If token exists but role is missing, fetch from database
+      if (token.id && !token.role) {
+        const dbUser = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: {
+            role: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            image: true,
+          },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.firstName = dbUser.firstName;
+          token.lastName = dbUser.lastName;
+          token.companyName = dbUser.companyName;
+          token.image = dbUser.image;
+        }
       }
 
       return token;
@@ -48,10 +94,11 @@ export const {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as "ADMIN" | "VENDOR" | "CUSTOMER";
-        session.user.firstName = token.firstName as string | null;
-        session.user.lastName = token.lastName as string | null;
-        session.user.phone = token.phone as string | null;
+        session.user.role = token.role as UserRole;
+        session.user.firstName = token.firstName as string;
+        session.user.lastName = token.lastName as string;
+        session.user.companyName = token.companyName as string | null;
+        session.user.image = token.image as string | null;
       }
       return session;
     },
@@ -98,7 +145,8 @@ export const {
     },
   },
   session: { strategy: "jwt" },
-  adapter: PrismaAdapter(db) as any,
+  // @ts-ignore - Adapter type mismatch between next-auth and @auth/prisma-adapter versions
+  adapter: PrismaAdapter(db),
   providers: [
     ...authConfig.providers!,
     Credentials({
@@ -107,35 +155,6 @@ export const {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials: any) {
-        // 1. Check for token-based login (Email Verification Auto-Login)
-        if (credentials.token && credentials.email) {
-          const { token, email } = credentials;
-
-          // Fetch token from DB
-          const verificationToken = await db.token.findFirst({
-            where: { token, type: "EmailVerification" },
-          });
-
-          if (
-            !verificationToken ||
-            verificationToken.email !== email ||
-            new Date(verificationToken.expires) < new Date()
-          ) {
-            return null;
-          }
-
-          // Fetch user
-          const user = await db.user.findUnique({ where: { email } });
-
-          if (!user) return null;
-
-          // Delete the token now that it has been used for login
-          await db.token.delete({ where: { id: verificationToken.id } });
-
-          return user;
-        }
-
-        // 2. Default Password Login
         const validatedFields = SigninSchema.safeParse(credentials);
 
         if (validatedFields.error) return null;

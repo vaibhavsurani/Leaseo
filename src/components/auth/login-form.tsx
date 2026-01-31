@@ -17,7 +17,7 @@ import * as z from "zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import Link from "next/link";
-import { Eye, EyeOff, Loader2, Mail } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,7 +31,7 @@ export function LoginForm() {
   const callbackUrl = searchparams.get("callbackUrl");
   const router = useRouter();
 
-  const form = useForm({
+  const form = useForm<z.infer<typeof SigninSchema>>({
     resolver: zodResolver(SigninSchema),
     defaultValues: {
       email: "",
@@ -57,20 +57,21 @@ export function LoginForm() {
           redirect: false,
         });
 
-        toast.success("Logged in!", { id: toastId, closeButton: true });
+        toast.success("Logged in successfully!", {
+          id: toastId,
+          closeButton: true,
+        });
 
-        if (callbackUrl) {
-          router.push(callbackUrl);
-          return;
-        }
-
-        if (data?.role === "VENDOR") {
-          router.push("/vendor/dashboard");
+        // Redirect based on role
+        if (data.role === "VENDOR") {
+          router.push(callbackUrl || "/vendor/dashboard");
+        } else if (data.role === "ADMIN") {
+          router.push(callbackUrl || "/admin/dashboard");
         } else {
-          router.push("/customer/dashboard");
+          router.push(callbackUrl || DEFAULT_LOGIN_REDIRECT);
         }
       } catch (err: any) {
-        toast.error(`Something went wrong: ${err?.message || ""}`, {
+        toast.error("Invalid User ID or Password.", {
           id: toastId,
           closeButton: true,
         });
@@ -80,27 +81,28 @@ export function LoginForm() {
 
   return (
     <CardWrapper
-      headerLabel="Welcome back"
-      headerdescription="Login with your Google account"
+      headerLabel="Login"
+      headerdescription="Enter your credentials to access your account"
       backButtonHref="/auth/signup"
-      backButtonLabel="Don't have an account?"
+      backButtonLable="Don't have an account? Register Here"
       isDisabled={isPending}
+      showSocial={false}
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
             name="email"
             disabled={isPending}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Login ID</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="xyz@gmail.com"
+                    placeholder="Enter your email"
+                    type="email"
                     {...field}
                     disabled={isPending}
-                    autoComplete="email"
                   />
                 </FormControl>
                 <FormMessage />
@@ -114,57 +116,49 @@ export function LoginForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
-                <div className="relative">
-                  <FormControl>
+                <FormControl>
+                  <div className="relative">
                     <Input
-                      placeholder="Enter you Password"
+                      placeholder="Enter your password"
                       {...field}
                       disabled={isPending}
                       type={isPasswordVisible ? "text" : "password"}
-                      autoComplete="current-password"
                     />
-                  </FormControl>
-                  <button
-                    className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
-                    onClick={() => {
-                      setIsPasswordVisible(!isPasswordVisible);
-                    }}
-                    type="button"
-                  >
-                    {isPasswordVisible ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
+                    <button
+                      className="absolute bottom-0 right-0 h-10 px-3 pt-1 text-center text-gray-500"
+                      onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                      type="button"
+                    >
+                      {isPasswordVisible ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
                 <FormMessage />
-                <Button
-                  disabled={isPending}
-                  className="mt-[1px] h-0 px-0 pt-2 font-normal text-[13px] flex justify-start"
-                  variant="link"
-                  size={"sm"}
-                  asChild
-                >
-                  <Link href="/auth/reset" className="text-start">
-                    Forget password?
-                  </Link>
-                </Button>
               </FormItem>
             )}
           />
-          <Button
-            disabled={isPending}
-            type="submit"
-            className="w-full space-y-0 py-0 mt-2"
-          >
+
+          <Button disabled={isPending} type="submit" className="w-full mt-4">
             {isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Mail className="mr-2 h-4 w-4" />
+              <LogIn className="mr-2 h-4 w-4" />
             )}
-            Login with Mail
+            Log In
           </Button>
+
+          <div className="text-center">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-primary hover:underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </form>
       </Form>
     </CardWrapper>

@@ -1,13 +1,15 @@
 import { useSession } from "next-auth/react";
-import getServerSession from "next-auth";
-import { authConfig } from "@/auth.config";
+import { UserRole } from "@prisma/client";
 
 type User = {
-  name: string;
-  email: string;
-  image: string | null;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
   id: string;
-  role?: string | null; // e.g., 'VENDOR' | 'CUSTOMER'
+  role: UserRole;
+  firstName?: string | null;
+  lastName?: string | null;
+  companyName?: string | null;
 };
 
 export function useCurrentUserClient(): {
@@ -18,14 +20,3 @@ export function useCurrentUserClient(): {
   //@ts-ignore
   return { user: session.data?.user ?? null, status: session.status };
 }
-
-// Server-side helper to get the currently authenticated user in server components/actions
-export async function currentUser(): Promise<User | null> {
-  try {
-    const session = await getServerSession(authConfig as any);
-    // The return type from getServerSession may vary between versions; cast to any to access .user
-    return ((session as any)?.user as User) ?? null;
-  } catch (err) {
-    return null;
-  }
-} 

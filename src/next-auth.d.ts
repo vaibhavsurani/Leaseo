@@ -1,11 +1,13 @@
 import NextAuth, { type DefaultSession } from "next-auth";
+import { UserRole } from "@prisma/client";
 
 export type ExtendedUser = DefaultSession["user"] & {
   id: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  phone?: string | null;
-  role?: "ADMIN" | "VENDOR" | "CUSTOMER";
+  role: UserRole;
+  firstName: string | null;
+  lastName: string | null;
+  companyName: string | null;
+  image: string | null;
 };
 
 declare module "next-auth" {
@@ -15,20 +17,21 @@ declare module "next-auth" {
 
   interface User {
     id: string;
-    role?: "ADMIN" | "VENDOR" | "CUSTOMER";
-    firstName?: string | null;
-    lastName?: string | null;
-    phone?: string | null;
+    role: UserRole;
+    firstName: string | null;
+    lastName: string | null;
+    companyName: string | null;
+    image: string | null;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    sub: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    phone?: string | null;
-    role?: "ADMIN" | "VENDOR" | "CUSTOMER";
+    role: UserRole;
+    firstName: string | null;
+    lastName: string | null;
+    companyName: string | null;
+    image: string | null;
   }
 }

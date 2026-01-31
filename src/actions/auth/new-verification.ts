@@ -2,8 +2,6 @@
 import { getUserByEmail } from "@/data/user";
 import { getVerifationTokenByToken } from "@/data/verification-token";
 import { db } from "@/lib/db";
-import { signIn } from "@/auth";
-import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
 export const newVerification = async (token: string) => {
   const existingToken = await getVerifationTokenByToken(token);
@@ -42,18 +40,15 @@ export const newVerification = async (token: string) => {
       },
     });
 
-    // NOTE: We do NOT delete the token here anymore.
-    // Instead, we pass it to signIn, and 'authorize' will delete it upon successful login.
+    await db.token.delete({
+      where: {
+        id: existingToken.id,
+        type: "EmailVerification",
+      },
+    });
   } catch (e) {
     return { error: "Error in EmailVerification" };
   }
-
-  // Auto-login the user
-  await signIn("credentials", {
-    email: existingToken.email,
-    token: existingToken.token,
-    redirectTo: DEFAULT_LOGIN_REDIRECT,
-  });
 
   return { success: "Email verified!" };
 };
